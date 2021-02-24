@@ -7,6 +7,11 @@ class produto(object):
         self.data_entrega=data_entrega
         self.vetor_ofs=[]
         self.qtd=qtd
+        self.espessura_inicial = 0
+        self.espessura_final = 0
+        self.largura = 0
+        self.comprimento = 0
+
 
     def adicionar_of(self,of):
         self.vetor_ofs.append(of)

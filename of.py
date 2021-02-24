@@ -1,10 +1,9 @@
 class of(object):
 
-    def __init__(self,id, cod_of, dimensao,t_producao):
+    def __init__(self,id, cod_of,t_producao):
 
         self.id=id
         self.cod_of=cod_of
-        self.dimensao=dimensao
         self.data_inicio=0
         self.turno=0
         self.data_fim=0
