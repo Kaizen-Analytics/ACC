@@ -6,6 +6,7 @@ class maquina(object):
         self.vetor_slots=[]
         self.setups=[]
         self.vetor_capacidade=[]
+        self.vetor_id_turno=[]
         # setups diferentes turno. guardar dimensoes
 
     def __repr__(self):
@@ -16,9 +17,6 @@ class maquina(object):
 
     def adicionar_setup(self,setup):
         self.setups.append(setup)
-
-    def adicionar_inicio_turno(self):
-        self.inicio_turno.append(0)
 
 
 

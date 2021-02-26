@@ -33,15 +33,38 @@ for index in range(0,len(produtos)):
             id_ofs_ret.append(produtos[index].vetor_ofs[id_of])
             id_produtos_ret.append(produtos[index].id)
 
-n_alocadas=0 #numero de ofs alocadas != do numero de produtos
+n=0 #numero de ofs alocadas != do numero de produtos
 n_ofs=len(id_ofs_ret)
-distinct_refs=0
+
+distinct_refs=[]
 
 id_maquina=8
 
-for index in range(0,len(maquinas[8].vetor_capacidade)):
+for index in range(0,len(maquinas[8].vetor_id_turno)):
 
-    if maquinas[8].vetor_capacidade[index]>id_ofs_ret[n_alocadas].t_producao:
+    #o index é partilhado pelo turno e pela capacidade
+
+    setup=10
+
+    while maquinas[8].vetor_capacidade[index]!=0:
+
+        if id_ofs_ret[n].cod_of not in distinct_refs[maquinas[8].vetor_id_turno[index]]:
+
+            distinct_refs[maquinas[8].vetor_id_turno[index]]+=1
+
+            #setup=get_setup(dim1,dim2)
+
+            setup=90
+
+        if maquinas[8].vetor_capacidade[index]>id_ofs_ret[n].t_producao+setup and len(distinct_refs)<3:
+
+            del id_ofs_ret[0]
+
+        n += 1
+
+
+
+
 
 
 
