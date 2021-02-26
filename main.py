@@ -1,51 +1,50 @@
+import pandas as pd
+from maquina import *
+from of import *
+from produto import *
+from slot import *
+from import_files import *
+from functions import *
 
-data_min=999
-id_produtos=[]
-id_produtos.append(produtos_ret[0].id)
-id_ofs=[]
+def sort_produtos():
 
-for i in range(1,len(produtos_ret)):
-    if produtos_ret[i].data_prioridade<id_produtos[0]:
-        data_min=produtos_ret[i].data_prioridade
-        id_produtos.insert(0,produtos_ret[i].id)
-        # passar para função
-        if produtos_ret[i].vetor_ofs[0].id not in id_ofs:
-            id_ofs.insert(0,produtos_ret[i].vetor_ofs[0].id)
-    else:
-        id_produtos.append(produtos_ret[i].id)
-        #passar para função
-        if produtos_ret[i].vetor_ofs[0].id not in id_ofs:
-            id_ofs.append(produtos_ret[i].vetor_ofs[0].id)
+    produtos.sort(key=lambda x: x.data_prioridade, reverse=False)
 
-id_maquina=1
-n_ofs=len(id_ofs)
-n_alocadas=0
-n_refs=1
-refs=[]
-turno=0
-temp_of=0
 
-def get_last_of()
-    return id_of
+sort_produtos()
 
-def alocar(n_alocadas,turno,)
-    ofs[id_ofs[n_alocadas]].alocado = id_inicio_turno[turno]
-    retificadora.capacidade_turno[id_inicio_turno[turno]] -= ofs[id_ofs[n_alocadas]].t_producao
-    ofs[id_ofs[n_alocadas]].data_inicio = get_last_of().data_fim + get_setups(retificadora,ofs[id_ofs[n_alocadas]].dimensao) #falta ver slots!!!
-    ofs[id_ofs[n_alocadas]].data_fim = ofs[id_ofs[n_alocadas]].data_inicio + ofs[id_ofs[n_alocadas]].t_producao
+id_ofs_ret=[]
+id_produtos_ret=[]
 
-for n_refs in range(1,3):
-    while n_alocadas<n_ofs:
-        if retificadora.capacidade_turno[id_inicio_turno[turno]]-ofs[id_ofs[n_alocadas]].t_producao-get_setups(retificadora,ofs[id_ofs[n_alocadas]].dimensao>0:
-            if (len(refs)=n_refs) and (ofs[id_ofs[n_alocadas]].dimensao in refs):
-                alocar(of)
-                n_alocadas += 1
-            elif ofs[id_ofs[n_alocadas]].dimensao not in refs and len(refs)<n_refs:
-                refs.append(ofs[id_ofs[n_alocadas]].dimensao)
-                alocar(of)
-                n_alocadas += 1
-        else:
-            turno+=1
+def get_min_slot(tempo,id_maquina):
+
+    id_slot=-1
+
+    for id_slot in maquinas[id_maquina].vetor_slots:
+        if tempo>=slots[id_slot]:
+            return id_slot
+
+    return id_slot
+
+for index in range(0,len(produtos)):
+
+    for id_of in range(0,len(produtos[index].vetor_ofs)):
+        if produtos[index].vetor_ofs[id_of].ct=='RETIFICADORA' and produtos[index].vetor_ofs[id_of] not in id_ofs_ret:
+            id_ofs_ret.append(produtos[index].vetor_ofs[id_of])
+            id_produtos_ret.append(produtos[index].id)
+
+n_alocadas=0 #numero de ofs alocadas != do numero de produtos
+n_ofs=len(id_ofs_ret)
+distinct_refs=0
+
+id_maquina=8
+
+for index in range(0,len(maquinas[8].vetor_capacidade)):
+
+    if maquinas[8].vetor_capacidade[index]>id_ofs_ret[n_alocadas].t_producao:
+
+
+
 
 
 

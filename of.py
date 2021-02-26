@@ -1,9 +1,10 @@
 class of(object):
 
-    def __init__(self,id, cod_of,t_producao):
+    def __init__(self,id, ct,cod_of,t_producao):
 
         self.id=id
         self.cod_of=cod_of
+        self.ct=ct
         self.data_inicio=0
         self.turno=0
         self.data_fim=0
@@ -14,5 +15,5 @@ class of(object):
     def __repr__(self):
         return str(self.id)
 
-    def adicionar_maquina(self,maquina):
-        self.vetor_maquinas.append(maquina)
+    def adicionar_maquinas(self,maquinas):
+        self.vetor_maquinas=maquinas

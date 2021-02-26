@@ -12,9 +12,9 @@ class produto(object):
         self.largura = 0
         self.comprimento = 0
 
+    def __repr__(self):
+        return str(self.id)
 
     def adicionar_of(self,of):
         self.vetor_ofs.append(of)
 
-    def __repr__(self):
-        return str(self.id)

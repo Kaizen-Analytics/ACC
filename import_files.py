@@ -4,32 +4,49 @@ from of import *
 from produto import *
 from slot import *
 
+from datetime import datetime
+
 produtos=[]
 ofs=[]
 maquinas=[]
+slots=[]
+
+format="%d/%m"
+d1="09/02"
+d1=datetime.strptime(d1, format)
+
+#talvez faça mais sentido colocar um for em vez disto fora do import....
+df_maquinas = pd.read_csv('Maquinas.csv', sep=",")
+df_maquinas["index_maquina"] = ""
+df_maquinas = df_maquinas.sort_values(by=['Máquina'])
+
+
+def import_slots():
+
+    df_slots = pd.read_csv('Slots.csv', sep=",")
+
+    for index, row in df_slots.iterrows():
+        new_slot = slot(row['index'], row['Inicio'], row['Fim'], row['Turno'])
+        slots.append(new_slot)
+
+    return df_slots
 
 def import_maquinas():
 
-    df_maquinas = pd.read_csv('Maquinas.csv', sep=",")
-    df_maquinas = df_maquinas.sort_values(by=['Máquina'])
-
     count_maquinas=0
     maquina_anterior=""
-    grupo_maquinas=[]
 
     for index,row in df_maquinas.iterrows():
 
-        if row['Máquina']==maquina_anterior:
-            grupo_maquinas.append(row['Código'])
+        if row['Máquina'] != maquina_anterior:
 
-        else:
-            new_maquina = maquina(count_maquinas, maquina_anterior,grupo_maquinas)
+            count_maquinas += 1
+            new_maquina = maquina(count_maquinas-1, row['Máquina'])
             maquinas.append(new_maquina)
+            lista_slots=import_slots()[import_slots()['Máquina']==row['Máquina']]['index'].tolist()
+            new_maquina.adicionar_slots(lista_slots)
 
-            grupo_maquinas = []
-            count_maquinas+=1
-            grupo_maquinas.append(row['Código'])
-
+        df_maquinas.at[index, 'index_maquina'] = count_maquinas-1
         maquina_anterior=row['Máquina']
 
     return df_maquinas
@@ -52,13 +69,17 @@ def import_produtos():
 
         count_produtos+=1
 
-        # Verificar se existe data de prioridade
+        prioridade = 999999
 
-        if 'PRIORIDADE' in row['OBSERVAÇÕES']:
+        # Verificar se existe data de prioridade de inicio de produção
+
+        if row['Sem']<6:
+            prioridade = 0
+
+        elif 'PRIORIDADE' in row['OBSERVAÇÕES']:
             prioridade=row['OBSERVAÇÕES'].split("PRIORIDADE ", 1)[1]
-
-        else:
-            prioridade=""
+            prioridade = datetime.strptime(prioridade, format)
+            prioridade=(prioridade-d1).total_seconds()/60
 
         new_produto = produto(count_produtos-1, row['Descrição Material'], prioridade, row['Sem'], row['QTD'])
         produtos.append(new_produto)
@@ -67,19 +88,18 @@ def import_produtos():
 
         if not pd.isnull(row['Serra/Lam']):
             count_ofs+=1
-            new_of=of(count_ofs-1,row['Ordem Prod'],row[11])
+            new_of=of(count_ofs-1,'Serra/Lam',row['Ordem Prod'],row[11])
+            new_of.adicionar_maquinas(df_maquinas[df_maquinas['Código']==row['Serra/Lam']]['index_maquina'].tolist())
             new_produto.adicionar_of(new_of)
             ofs.append(new_of)
-            #ADICIONAR GET
-            # lista=[x for x in maquinas if row['Serra/Lam'] in x.grupo]
-            print(lista)
 
         # Criar OF da retificadora se não estiver vazia nem for igual à anterior
 
         if not pd.isnull(row['BLOCO']) and bloco_anterior!=row['Descrição Bloco']:
 
             count_ofs += 1
-            new_of=of(count_ofs-1,row['Descrição Bloco'],row[18])
+            new_of=of(count_ofs-1,'RETIFICADORA',row['Descrição Bloco'],row[18])
+            new_of.adicionar_maquinas(df_maquinas[df_maquinas['Código'] == 'RETIFICADORA']['index_maquina'].tolist())
             new_produto.adicionar_of(new_of)
             ofs.append(new_of)
             bloco_anterior=row['Descrição Bloco']
@@ -89,9 +109,12 @@ def import_produtos():
         if not pd.isnull(row['Lixadora']):
 
             count_ofs+=1
-            new_of=of(count_ofs-1,row['Lixadora'],row[14])
+            new_of=of(count_ofs-1,'LIXADORA',row['Lixadora'],row[14])
+            new_of.adicionar_maquinas(df_maquinas[df_maquinas['Código'] == 'LIXADORA']['index_maquina'].tolist())
             new_produto.adicionar_of(new_of)
 
     return df_produtos
 
 import_produtos()
+
+
