@@ -10,3 +10,6 @@ class slot(object):
     def __repr__(self):
         return str(self.id)
 
+    def duracao(self):
+        return self.fim-self.inico
+
