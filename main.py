@@ -12,113 +12,113 @@ import_maquinas()
 
 definir_capacidades()
 
-sort_ofs(ofs)
+for index in range(len(ofs)):
+    ofs[index].definir_data_min()
+#     print(ofs[index].data_min)
 
 id_ofs=get_ids(ofs)
 
 ofs_ret=filter_ofs('RETIFICADORA',id_ofs)
 
+sort_ofs(ofs)
+
+# for index in range(len(ofs_ret)):
+#     print(ofs[ofs_ret[index]].descricao_material)
+#     print(ofs[ofs_ret[index]].t_producao)
+
 turno = 0
+
+materiais=[]
+dimensoes=[]
+max_setups=50
 
 for index in range(len(ofs_ret)):
 
     max_turno=len(maquinas[8].id_slot_inicio_turno)-1
+
     setup=10
+
     remanescente=ofs[ofs_ret[index]].t_producao+setup
 
+    print('op' + str(ofs[ofs_ret[index]].cod_of) + ' of: ' + str(ofs[ofs_ret[index]].descricao_material) + ' turno: ' + str(turno))
+
+    # print('tempo de produção: ' + str(remanescente))
+    # print('material :' + str(ofs[ofs_ret[index]].material))
+    # print('dimensao :' + str(ofs[ofs_ret[index]].dimensao))
+
     while remanescente>0 and turno<max_turno: #transformar em função
+
+        # print((len(materiais)+len(dimensoes)))
+        # print(materiais)
+        # print(dimensoes)
+
+        if ofs[ofs_ret[index]].material not in materiais and (len(materiais)+len(dimensoes)) < max_setups:
+
+            materiais.append(ofs[ofs_ret[index]].material)
+            materiais=list(set(materiais))
+            # dimensoes.append(ofs[ofs_ret[index]].dimensao)
+            # dimensoes = list(set(dimensoes))
+
+        else:
+            maquinas[8].vetor_materiais.append(materiais)
+            turno+=1
+            materiais=[]
 
         if maquinas[8].vetor_capacidade[turno]!=0:
 
             if ofs[ofs_ret[index]].id_alocada==0:
-                ofs[ofs_ret[index]].id_alocada = 1
+                ofs[ofs_ret[index]].id_alocada = 8
                 ofs[ofs_ret[index]].id_slot_inicio_turno = maquinas[8].id_slot_inicio_turno[turno]
-
-                #alterar index-1 - pode nao ser feasible
-                ofs[ofs_ret[index]].data_inicio = calcular_data_inicio(8,index-1,index)
-
-                print('id slot inicial:' + str(ofs[ofs_ret[index]].id_slot_inicio_turno))
-                print('data inicio: ' + str(ofs[ofs_ret[index]].data_inicio))
 
             remanescente = maquinas[8].diminuir_capacidade(turno, remanescente)
 
             if maquinas[8].vetor_capacidade[turno]==0:
-
+                maquinas[8].vetor_materiais.append(materiais)
                 turno+=1
+                dimensoes=[]
 
         else:
 
+            maquinas[8].vetor_materiais.append(materiais)
             turno += 1
+            materiais = []
+            dimensoes=[]
 
-    ofs[ofs_ret[index]].data_fim = calcular_data_fim(ofs[ofs_ret[index]].data_inicio,ofs[ofs_ret[index]].t_producao+setup, 8)
 
-# def get_of_min(vetor_id):
+
+# for index in range(len(maquinas[8].id_slot_inicio_turno)):
 #
-#     n_ofs=len(vetor_id)
-#     id_next_of=0
-#     data_min=99999
-#
-#     for index in range(n_produtos):
-#         if vetor_id[index].data_prioridade<data_min and vetor_id[]
-#
-#     produtos.sort(key=lambda x: x.data_prioridade, reverse=False)
-#     #ordenar ids, nao vetor
-#
-# def get_of_data_min():
-#
-#     #Vai buscar o delta mais curto da lista de produtos da OF
-#
-#
-#
-# id_ofs_ret=[]
-# id_produtos_ret=[]
-#
-# def get_min_slot(tempo,id_maquina):
-#
-#     id_slot=-1
-#
-#     for id_slot in maquinas[id_maquina].vetor_slots:
-#         if tempo>=slots[id_slot]:
-#             return id_slot
-#
-#     return id_slot
-#
-# for index in range(0,len(produtos)): #função verificar ofs retificadora
-#
-#     for id_of in range(0,len(produtos[index].vetor_ofs)):
-#         if produtos[index].vetor_ofs[id_of].ct=='RETIFICADORA' and produtos[index].vetor_ofs[id_of] not in id_ofs_ret:
-#             id_ofs_ret.append(produtos[index].vetor_ofs[id_of])
-#             id_produtos_ret.append(produtos[index].id)
-#
-# n=0 #numero de ofs alocadas != do numero de produtos
-# n_ofs=len(id_ofs_ret)
-#
-# distinct_refs=[]
-# refs_turno=[]
-# lim_refs=2
-#
-#
-# id_maquina=8 #Criar função para guardar id retificadora
-#
-# for index in range(0,len(maquinas[8].vetor_id_turno)):
-#
-#     #o index é partilhado pelo turno e pela capacidade
-#
-#     setup=10
-#
-#     while maquinas[8].vetor_capacidade[index]!=0:
-#
-#         if id_ofs_ret[n].cod_of not in distinct_refs[maquinas[8].vetor_id_turno[index]]:
-#
-#             distinct_refs[maquinas[8].vetor_id_turno[index]]+=1
-#
-#             #setup=get_setup(dim1,dim2)
-#
-#             setup=90
-#
-#         if maquinas[8].vetor_capacidade[index]>id_ofs_ret[n].t_producao+setup and len(distinct_refs)<3:
-#
-#         n += 1
+#     print('materiais: ' + str(maquinas[8].vetor_materiais[index]))
+
+
+for index in range(len(maquinas[8].id_slot_inicio_turno)):
+
+    id_slot_inicio_turno = maquinas[8].id_slot_inicio_turno[index]
+    lista_a_sortear=[]
+
+    for id_of in range(len(ofs_ret)):
+
+        if ofs[ofs_ret[id_of]].id_slot_inicio_turno==id_slot_inicio_turno:
+            lista_a_sortear.append(ofs_ret[id_of])
+
+    #print(lista_a_sortear)
+
+for index in range(len(ofs_ret)):
+
+    ofs[ofs_ret[index]].data_inicio = calcular_data_inicio(8, ofs_ret[index-1])
+    print('of: ' + str(ofs[ofs_ret[index]].descricao_material) + 'data inicio: ' + str(ofs[ofs_ret[index]].data_inicio))
+    ofs[ofs_ret[index]].data_fim = calcular_data_fim(ofs[ofs_ret[index]].data_inicio,ofs[ofs_ret[index]].t_producao + 10, 8)
+    #print('data fim: ' + str(ofs[ofs_ret[index]].data_fim))
+
+output = pd.DataFrame(columns=['Ordem de Produção', 'Tempo de Produção', 'Data Inicio', 'Data Fim' , 'Turno'])
+
+for index in range(len(ofs_ret)):
+
+    output = output.append({'Ordem de Produção': ofs[ofs_ret[index]].descricao_material, 'Tempo de Produção': ofs[ofs_ret[index]].t_producao,  'Data Inicio':ofs[ofs_ret[index]].data_inicio,'Data Fim':ofs[ofs_ret[index]].data_fim , 'Turno': slots[ofs[ofs_ret[index]].id_slot_inicio_turno].turno }, ignore_index=True)
+    
+output.to_csv('output.csv')
+
+
 
 
 

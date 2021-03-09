@@ -4,6 +4,7 @@ from of import *
 from produto import *
 from slot import *
 from datetime import datetime
+import math
 
 produtos=[]
 ofs=[]
@@ -11,128 +12,174 @@ maquinas=[]
 slots=[]
 
 format="%d/%m"
-d1="09/02"
+d1="01/03"
 d1=datetime.strptime(d1, format)
-
-#talvez faça mais sentido colocar um for em vez disto fora do import....
-df_maquinas = pd.read_csv('Maquinas.csv', sep=",")
-df_maquinas["index_maquina"] = ""
-df_maquinas = df_maquinas.sort_values(by=['Máquina'])
-
 
 def import_slots():
 
     df_slots = pd.read_csv('Slots.csv', sep=",")
+    df_slots["index"] = ""
+    count_slots=0
 
     for index, row in df_slots.iterrows():
-        new_slot = slot(row['index'], row['Inicio'], row['Fim'], row['Turno'])
+        new_slot = slot(count_slots, row['Máquina'], row['Inicio'], row['Fim'], row['Turno'])
         slots.append(new_slot)
+        df_slots.at[index,'index']=count_slots
+        count_slots+=1
 
     return df_slots
 
 def import_maquinas():
 
+    df_maquinas = pd.read_csv('Maquinas.csv', sep=",")
+    df_maquinas["index_maquina"] = ""
+    df_maquinas = df_maquinas.sort_values(by=['Máquina'])
+
     count_maquinas=0
-    maquina_anterior=""
 
     for index,row in df_maquinas.iterrows():
 
-        if row['Máquina'] != maquina_anterior:
-
-            count_maquinas += 1
-            new_maquina = maquina(count_maquinas-1, row['Máquina'])
-            maquinas.append(new_maquina)
-            lista_slots=import_slots()[import_slots()['Máquina']==row['Máquina']]['index'].tolist()
-            new_maquina.adicionar_slots(lista_slots)
-
-        df_maquinas.at[index, 'index_maquina'] = count_maquinas-1
-        maquina_anterior=row['Máquina']
+        new_maquina = maquina(count_maquinas,row['Código'], row['Máquina'],0.9)
+        maquinas.append(new_maquina)
+        lista_slots=import_slots()[import_slots()['Máquina']==row['Máquina']]['index'].tolist()
+        new_maquina.adicionar_slots(lista_slots)
+        df_maquinas.at[index, 'index_maquina'] = count_maquinas
+        count_maquinas += 1
 
     return df_maquinas
 
+import_slots()
+df_maquinas=import_maquinas()
+
 def import_ofs():
 
-    df_produtos=pd.read_csv('Controlo de Produção.csv',sep=",")
-    df_produtos=df_produtos.sort_values(by=['BLOCO'])
-    df_produtos['OBSERVAÇÕES'] = df_produtos['OBSERVAÇÕES'].astype(str)
+    count_ofs = 0
+    id_precedencia=[]
 
-    count_produtos=0
-    count_ofs=0
-    bloco_anterior=""
+    #LER NECESSIDADES PLACAS
 
-    # Cada produto corresponde a uma linha da df_produtos
+    df_placas=pd.read_csv('Placas_CNM_W0921.csv',sep=",")
+    df_placas['OBSERVAÇÕES'] = df_placas['OBSERVAÇÕES'].astype(str)
 
-    for index,row in df_produtos.iterrows():
+    for index, row in df_placas.iterrows():
 
-        count_produtos+=1
+        #verificar a prioridade do produto final
 
         prioridade = 999999
 
-        # Verificar se existe data de prioridade de inicio de produção
-
-        if row['Sem']<6:
-            prioridade = 0
+        if row['SEM'] < 9:
+            prioridade = (0-d1).total_seconds()/60
 
         elif 'PRIORIDADE' in row['OBSERVAÇÕES']:
             prioridade=row['OBSERVAÇÕES'].split("PRIORIDADE ", 1)[1]
             prioridade = datetime.strptime(prioridade, format)
             prioridade=(prioridade-d1).total_seconds()/60
 
-        #new_produto = produto(count_produtos-1, row['Descrição Material'], prioridade, row['Sem'], row['QTD'])
-        #produtos.append(new_produto)
+        #adicionar ofs por precedências
 
-        """Criar OF de serra ou laminadora"""
-
-        if not pd.isnull(row['Serra/Lam']):
-
-            of_serralam=of(count_ofs,'Serra/Lam',row['Ordem Prod'],row[11])
-            of_serralam.adicionar_maquinas(df_maquinas[df_maquinas['Código']==row['Serra/Lam']]['index_maquina'].tolist())
-            of_serralam.adicionar_produto(prioridade,row['Sem'])
-            ofs.append(of_serralam)
-            count_ofs += 1
-
-        # Criar OF da retificadora se não estiver vazia nem for igual à anterior
-
-        if not pd.isnull(row['BLOCO']) and bloco_anterior!=row['Descrição Bloco']:
-
-            of_ret=of(count_ofs,'RETIFICADORA',row['Descrição Bloco'],800)
-            of_ret.adicionar_maquinas(df_maquinas[df_maquinas['Código'] == 'RETIFICADORA']['index_maquina'].tolist())
-            #new_produto.adicionar_of(new_of)
-            ofs.append(of_ret)
-            bloco_anterior=row['Descrição Bloco']
-            count_ofs += 1
+        #1. retificadora
+        #self,id, ct,cod_of,descricao_material,t_producao
 
         if not pd.isnull(row['BLOCO']):
-
-            of_ret.adicionar_produto(prioridade, row['Sem'])
-
-        # Criar OF da lixadora
-
-        if not pd.isnull(row['Lixadora']):
-
-            of_lix=of(count_ofs,'LIXADORA',row['Lixadora'],row[14])
-            of_lix.adicionar_maquinas(df_maquinas[df_maquinas['Código'] == 'LIXADORA']['index_maquina'].tolist())
-            of_lix.adicionar_produto(prioridade, row['Sem'])
-            ofs.append(of_lix)
+            of_ret = of(count_ofs, 'RETIFICADORA', row['BLOCO'], row[17],math.ceil(row['QTD BL.'])*0.22*60,[],prioridade)
+            of_ret.adicionar_maquinas(df_maquinas[df_maquinas['Código'] == 'RETIFICADORA']['index_maquina'].tolist())
+            ofs.append(of_ret)
+            id_precedencia.append(count_ofs)
             count_ofs += 1
-            #new_produto.adicionar_of(new_of)
 
-    return df_produtos
+        # 2.Serra
+        # self,id, ct,cod_of,descricao_material,t_producao
+
+        if not pd.isnull(row['SERRA/LAM']):
+            of_serra_lam = of(count_ofs, row['CT'], row['SERRA/LAM'], row['Descrição Material'], row[14]*60, id_precedencia,prioridade)
+            of_serra_lam.adicionar_maquinas(df_maquinas[df_maquinas['Código'] == row['CT']]['index_maquina'].tolist())
+            ofs.append(of_serra_lam)
+            id_precedencia.append(count_ofs)
+            count_ofs += 1
+
+        # 3.Lixadora
+        if not pd.isnull(row['OF Lixadora']):
+            of_lixadora = of(count_ofs, 'LIXADORA', row['OF Lixadora'], row['Descrição Material'], row[17]*60, id_precedencia,prioridade)
+            of_lixadora.adicionar_maquinas(df_maquinas[df_maquinas['Código'] == 'LIXADORA']['index_maquina'].tolist())
+            ofs.append(of_lixadora)
+            count_ofs += 1
+
+        id_precedencia=[]
+
+    # LER NECESSIDADES CSS
+
+    df_css = pd.read_csv('CCS_CNM_W0921.csv', sep=",")
+
+    for index, row in df_css.iterrows():
+
+        #verificar a prioridade do produto final
+
+        prioridade = 999999
+
+        if 'Até' in row['Data solicitada']:
+            prioridade=row['Data solicitada'].split("Até ", 1)[1]
+            d = "01/03/2021"
+            d = datetime.strptime(d, '%d/%m/%Y')
+            prioridade = datetime.strptime(prioridade, '%d/%m/%Y')
+            prioridade=(prioridade-d).total_seconds()/60
 
 
+        elif pd.isnull(row['Data solicitada'])==False:
+            d = "01/03/2021"
+            d = datetime.strptime(d, '%d/%m/%Y')
+            prioridade = datetime.strptime(row['Data solicitada'], '%d/%m/%Y')
+            prioridade = (prioridade-d).total_seconds()/60
 
-#of BL CC 8003/ORT 940X640X250 NE id=10
-#retificadora id=10
 
-# for index in range(len(ofs)):
-#     print(ofs[index].id)
-#     ofs[index].definir_data_min()
-#     print(ofs[index].cod_of)
-#     print(ofs[index].data_min)
+        #adicionar ofs por precedências
 
-# for index in range(len(maquinas)):
-#     print(maquinas[index].nome)
-#     for id_slot in range(len(maquinas[index].vetor_slots)):
-#         print(str(slots[id_slot].inicio) + " " + str(slots[id_slot].fim))
+        #1. retificadora
+        #self,id, ct,cod_of,descricao_material,t_producao
 
+        if not pd.isnull(row['Bloco']):
+            of_ret = of(count_ofs, 'RETIFICADORA', row['Bloco'], row[12],math.ceil(row['QTD BL.'])*0.22*60,[],prioridade)
+            of_ret.adicionar_maquinas(df_maquinas[df_maquinas['Código'] == 'RETIFICADORA']['index_maquina'].tolist())
+            ofs.append(of_ret)
+            id_precedencia.append(count_ofs)
+            count_ofs += 1
+
+        # 2.Serra e Lixadora
+        # self,id, ct,cod_of,descricao_material,t_producao
+
+        if not pd.isnull(row['Centro trabalho']):
+            of_serra_lam = of(count_ofs, row['Centro trabalho'], row['Ordem Produção'], row['Descrição Material'], row['Hrs']*60, id_precedencia,prioridade)
+            of_serra_lam.adicionar_maquinas(df_maquinas[df_maquinas['Código'] == row['Centro trabalho']]['index_maquina'].tolist())
+            ofs.append(of_serra_lam)
+            id_precedencia.append(count_ofs)
+            count_ofs += 1
+
+        id_precedencia=[]
+
+        # LER NECESSIDADES BLOCOS INTEIROS
+
+        df_blocos = pd.read_csv('BL INTEIROS_CNM_W0921.csv', sep=",")
+
+        for index, row in df_blocos.iterrows():
+
+            # verificar a prioridade do produto final
+
+            prioridade = 999999
+
+            if row['SEM'] < 9:
+                prioridade = (0 - d1).total_seconds() / 60
+
+            # adicionar ofs por precedências
+
+            # 1. retificadora
+            # self,id, ct,cod_of,descricao_material,t_producao
+
+            if not pd.isnull(row['Item']):
+                of_ret = of(count_ofs, 'RETIFICADORA', row['Material'], row['Desc. Material'], math.ceil(row['QTD']) * 0.22 * 60, [],prioridade)
+                of_ret.adicionar_maquinas(df_maquinas[df_maquinas['Código'] == 'RETIFICADORA']['index_maquina'].tolist())
+                ofs.append(of_ret)
+                count_ofs += 1
+
+    return df_placas
+
+import_ofs()
 

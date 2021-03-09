@@ -28,7 +28,7 @@ def filter_ofs(ct,ids):
 
 def sort_ofs(vetor_ofs):
 
-    vetor_ofs.sort(key=lambda x: x.data_min, reverse=True)
+    vetor_ofs.sort(key=lambda x: x.data_min, reverse=False)
 
 def definir_data_of(id_of):
 
@@ -83,18 +83,18 @@ def definir_capacidades():
 
                 maquinas[index].adicionar_turno(slots[maquinas[index].vetor_slots[i]].id, capacidade)
 
-def calcular_data_inicio(id_maquina,id_ultimo_alocado,id_alocar):
+def calcular_data_inicio(id_maquina,id_ultimo_alocado):
 
     #fornece id anterior e id a alocar porque pode o index-1 ser impossível
 
     if id_ultimo_alocado<0:
         #primeiro alocado
-        ofs[id_alocar].data_inicio=slots[maquinas[id_maquina].vetor_slots[0]].inicio
-    else:
-        id_slot=ofs[id_ultimo_alocado].id_slot_inicio_turno
-        #a of pode começar no ultimo minuto da slot? se sim colocar if !!!!!
-        ofs[id_alocar].data_inicio = ofs[id_ultimo_alocado].data_fim+1
+        return slots[maquinas[id_maquina].vetor_slots[0]].inicio
 
+    else:
+        #a of pode começar no ultimo minuto da slot? se sim colocar if !!!!!
+        #print('data fim da ultima alocada: ' + str(ofs[id_ultimo_alocado].data_fim))
+        return ofs[id_ultimo_alocado].data_fim+1
 
 def calcular_data_fim(t_start,tempo_teorico, id_maquina):
     # Percorrer as slots e determinar o momento final (não considerar ocupação)
@@ -114,24 +114,46 @@ def calcular_data_fim(t_start,tempo_teorico, id_maquina):
         s_slot = slot.inicio
         f_slot = slot.fim
 
+
+        print('tempo em falta:' + str(tempo_em_falta))
+        print('t_start: ' + str(t_start))
+        print('inicio slot: ' + str(s_slot))
+        print('fim slot: ' + str(f_slot))
+
         # Se for Slot Inicial
         if t_start >= s_slot and t_start <= f_slot:
 
-            if f_slot - t_start <= tempo_em_falta:  # Se couber na primeira slot
+            #if f_slot - t_start <= tempo_em_falta:
+            # Se couber na primeira slot
+            if f_slot - t_start <= tempo_em_falta:
                 t_finish = t_start + tempo_em_falta
                 tempo_em_falta = 0
+                print('tempo em falta:' + str(tempo_em_falta))
+
             else:
-                tempo_em_falta = tempo_em_falta - (f_slot - t_start)
+
+                if tempo_em_falta - (f_slot - t_start)>0:
+
+                    tempo_em_falta = tempo_em_falta - (f_slot - t_start)
+
+                else:
+                    t_finish = t_start + tempo_em_falta
+                    tempo_em_falta=0
+                print('tempo em falta:' + str(tempo_em_falta))
 
         elif t_start <= s_slot:
 
             if f_slot - s_slot <= tempo_em_falta:  # Se o restante couber na slot
                 t_finish = s_slot + tempo_em_falta
                 tempo_em_falta = 0
+
             else:
                 tempo_em_falta = tempo_em_falta - (f_slot - s_slot)
+                print('tempo em falta:' + str(tempo_em_falta))
+
         # Incremento
         index += 1
+
 
     if t_finish > 0:
         return t_finish

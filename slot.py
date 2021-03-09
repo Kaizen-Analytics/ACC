@@ -1,8 +1,9 @@
 class slot(object):
 
-    def __init__(self,id,inicio, fim, turno):
+    def __init__(self,id,maquina,inicio, fim, turno):
 
         self.id=id
+        self.maquina=maquina
         self.inicio=inicio
         self.fim=fim
         self.turno=turno

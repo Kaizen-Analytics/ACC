@@ -1,12 +1,15 @@
 class maquina(object):
 
-    def __init__(self,id,nome):
+    def __init__(self,id,ct,nome,oee):
         self.nome=nome
         self.id = id
+        self.ct=ct
         self.vetor_slots=[]
         self.setups=[]
         self.vetor_capacidade=[]
         self.id_slot_inicio_turno=[]
+        self.vetor_materiais=[]
+        self.OEE=oee
         # setups diferentes turno. guardar dimensoes
 
     def __repr__(self):
